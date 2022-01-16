@@ -50,3 +50,20 @@ func TestGetExpiredItem(t *testing.T) {
 	_, found = c.Get("key1")
 	assert.False(t, found)
 }
+
+type TestStruct struct {
+	Num      int
+	Children []*TestStruct
+}
+
+func TestStorePointerToStruct(t *testing.T) {
+	c := New[*TestStruct](time.Minute, time.Minute)
+	c.Set("key1", &TestStruct{Num: 1}, DefaultExpiration)
+	value1, found := c.Get("key1")
+	assert.True(t, found)
+	assert.Equal(t, 1, value1.Num)
+	value1.Num++
+	value2, found := c.Get("key1")
+	assert.True(t, found)
+	assert.Equal(t, 2, value2.Num)
+}

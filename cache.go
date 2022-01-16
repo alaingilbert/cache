@@ -65,6 +65,14 @@ func (c *Cache[K, V]) Get(k K) (V, bool) {
 	return value, found
 }
 
+// GetWithExpiration a value and it's expiration
+func (c *Cache[K, V]) GetWithExpiration(k K) (V, time.Time, bool) {
+	c.mtx.RLock()
+	value, expiration, found := c.getWithExpiration(k)
+	c.mtx.RUnlock()
+	return value, expiration, found
+}
+
 // Set a key/value pair in the cache
 func (c *Cache[K, V]) Set(k K, v V, d time.Duration) {
 	c.mtx.Lock()
@@ -121,17 +129,26 @@ func (c *Cache[K, V]) has(k K) bool {
 	return found
 }
 
-func (c *Cache[K, V]) get(k K) (V, bool) {
+func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
 	var zero V
 	now := c.clock.Now().UnixNano()
 	item, found := c.items[k]
 	if !found {
-		return zero, false
+		return zero, time.Time{}, false
 	}
-	if item.isExpired(now) {
-		return zero, false
+	e := time.Time{}
+	if item.expiration > 0 {
+		if item.expiration < now {
+			return zero, time.Time{}, false
+		}
+		e = time.Unix(0, item.expiration)
 	}
-	return item.value, found
+	return item.value, e, found
+}
+
+func (c *Cache[K, V]) get(k K) (V, bool) {
+	value, _, found := c.getWithExpiration(k)
+	return value, found
 }
 
 func (c *Cache[K, V]) set(k K, v V, d time.Duration) {

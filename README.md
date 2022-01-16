@@ -16,17 +16,17 @@ func main() {
 	// purges expired items every 10 minutes
 	c := cache.New[string](5*time.Minute, 10*time.Minute)
     
-    c.Set("key1", "val1", cache.DefaultExpiration)
+	c.Set("key1", "val1", cache.DefaultExpiration)
     
-    c.Set("key2", "val2", cache.NoExpiration)
+	c.Set("key2", "val2", cache.NoExpiration)
 
-    found := c.Has("key1")
+	found := c.Has("key1")
 
-    value, found := c.Get("key1")
+	value, found := c.Get("key1")
 	if found {
 		fmt.Println(value)
 	}
 
-    c.Delete("key1")
+	c.Delete("key1")
 }
 ```

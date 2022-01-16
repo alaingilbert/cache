@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -78,6 +79,24 @@ func (c *Cache[K, V]) Set(k K, v V, d time.Duration) {
 	c.mtx.Lock()
 	c.set(k, v, d)
 	c.mtx.Unlock()
+}
+
+// Add an item to the cache only if an item doesn't already exist for the given
+// key, or if the existing item has expired. Returns an error otherwise.
+func (c *Cache[K, V]) Add(k K, v V, d time.Duration) error {
+	c.mtx.Lock()
+	err := c.add(k, v, d)
+	c.mtx.Unlock()
+	return err
+}
+
+// Replace set a new value for the cache key only if it already exists, and the existing
+// item hasn't expired. Returns an error otherwise.
+func (c *Cache[K, V]) Replace(k K, v V, d time.Duration) error {
+	c.mtx.Lock()
+	err := c.replace(k, v, d)
+	c.mtx.Unlock()
+	return err
 }
 
 // Delete an item from the cache
@@ -182,6 +201,22 @@ func (c *Cache[K, V]) set(k K, v V, d time.Duration) {
 	}
 	e = c.clock.Now().Add(d).UnixNano()
 	c.items[k] = Item[V]{value: v, expiration: e}
+}
+
+func (c *Cache[K, V]) add(k K, v V, d time.Duration) error {
+	if _, found := c.get(k); found {
+		return fmt.Errorf("item %v already exists", k)
+	}
+	c.set(k, v, d)
+	return nil
+}
+
+func (c *Cache[K, V]) replace(k K, v V, d time.Duration) error {
+	if _, found := c.get(k); !found {
+		return fmt.Errorf("item %v doesn't exists", k)
+	}
+	c.set(k, v, d)
+	return nil
 }
 
 func (c *Cache[K, V]) deleteAll() {

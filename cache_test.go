@@ -29,7 +29,7 @@ func TestNewWithKey(t *testing.T) {
 
 func TestItemIsExpired(t *testing.T) {
 	clock := clockwork.NewFakeClock()
-	i := item[int]{value: 1, expiration: clock.Now().Add(time.Minute).UnixNano()}
+	i := Item[int]{value: 1, expiration: clock.Now().Add(time.Minute).UnixNano()}
 	assert.False(t, i.isExpired(clock.Now().UnixNano()))
 	clock.Advance(59 * time.Second)
 	assert.False(t, i.isExpired(clock.Now().UnixNano()))

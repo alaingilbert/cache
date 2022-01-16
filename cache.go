@@ -14,7 +14,7 @@ const (
 )
 
 // Item wrap the user provided value and add data to it
-type item[V any] struct {
+type Item[V any] struct {
 	value      V
 	expiration int64
 }
@@ -24,7 +24,7 @@ type Cache[K comparable, V any] struct {
 	cancel            context.CancelFunc // Cancel the context and stop the auto-cleanup thread
 	mtx               sync.RWMutex       // This mutex should only be used in exported methods
 	defaultExpiration time.Duration      // Default expiration for items in cache
-	items             map[K]item[V]      // Hashmap that contains all items in the cache
+	items             map[K]Item[V]      // Hashmap that contains all items in the cache
 	clock             clockwork.Clock    // Clock object for time related features
 }
 
@@ -94,13 +94,30 @@ func (c *Cache[K, V]) DeleteExpired() {
 	c.mtx.Unlock()
 }
 
+// Len returns the number of items in the cache. This may include items that have
+// expired, but have not yet been cleaned up.
+func (c *Cache[K, V]) Len() int {
+	c.mtx.Lock()
+	n := len(c.items)
+	c.mtx.Unlock()
+	return n
+}
+
+// Items copies all unexpired items in the cache into a new map and returns it.
+func (c *Cache[K, V]) Items() map[K]Item[V] {
+	c.mtx.RLock()
+	items := c.getItems()
+	c.mtx.RUnlock()
+	return items
+}
+
 // SetClock set the clock object
 func (c *Cache[K, V]) SetClock(clock clockwork.Clock) {
 	c.clock = clock
 }
 
 func newCache[K comparable, V any](ctx context.Context, defaultExpiration, cleanupInterval time.Duration) *Cache[K, V] {
-	items := make(map[K]item[V])
+	items := make(map[K]Item[V])
 	c := new(Cache[K, V])
 	c.ctx, c.cancel = context.WithCancel(ctx)
 	c.clock = clockwork.NewRealClock()
@@ -157,7 +174,7 @@ func (c *Cache[K, V]) set(k K, v V, d time.Duration) {
 		d = c.defaultExpiration
 	}
 	e = c.clock.Now().Add(d).UnixNano()
-	c.items[k] = item[V]{value: v, expiration: e}
+	c.items[k] = Item[V]{value: v, expiration: e}
 }
 
 func (c *Cache[K, V]) delete(k K) {
@@ -174,7 +191,34 @@ func (c *Cache[K, V]) deleteExpired() {
 	}
 }
 
+func (c *Cache[K, V]) getItems() map[K]Item[V] {
+	now := c.clock.Now().UnixNano()
+	m := make(map[K]Item[V], len(c.items))
+	for k, v := range c.items {
+		if !v.isExpired(now) {
+			m[k] = v
+		}
+	}
+	return m
+}
+
+// Value returns the value contained by the item
+func (i Item[V]) Value() V {
+	return i.value
+}
+
+// Expiration returns the expiration time
+func (i Item[V]) Expiration() time.Time {
+	return time.Unix(0, i.expiration)
+}
+
+// IsExpired returns either or not the item is expired right now
+func (i Item[V]) IsExpired() bool {
+	now := time.Now().UnixNano()
+	return i.isExpired(now)
+}
+
 // Given a unix (nano) timestamp, return either or not the item is expired
-func (i item[V]) isExpired(ts int64) bool {
+func (i Item[V]) isExpired(ts int64) bool {
 	return i.expiration > 0 && i.expiration < ts
 }

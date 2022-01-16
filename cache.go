@@ -94,6 +94,13 @@ func (c *Cache[K, V]) DeleteExpired() {
 	c.mtx.Unlock()
 }
 
+// DeleteAll deletes all items from the cache
+func (c *Cache[K, V]) DeleteAll() {
+	c.mtx.Lock()
+	c.deleteAll()
+	c.mtx.Unlock()
+}
+
 // Len returns the number of items in the cache. This may include items that have
 // expired, but have not yet been cleaned up.
 func (c *Cache[K, V]) Len() int {
@@ -175,6 +182,10 @@ func (c *Cache[K, V]) set(k K, v V, d time.Duration) {
 	}
 	e = c.clock.Now().Add(d).UnixNano()
 	c.items[k] = Item[V]{value: v, expiration: e}
+}
+
+func (c *Cache[K, V]) deleteAll() {
+	c.items = make(map[K]Item[V])
 }
 
 func (c *Cache[K, V]) delete(k K) {

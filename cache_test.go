@@ -38,3 +38,15 @@ func TestItemIsExpired(t *testing.T) {
 	clock.Advance(time.Second)
 	assert.True(t, i.isExpired(clock.Now().UnixNano()))
 }
+
+func TestGetExpiredItem(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, time.Minute)
+	c.SetClock(clock)
+	c.Set("key1", "val1", DefaultExpiration)
+	_, found := c.Get("key1")
+	assert.True(t, found)
+	clock.Advance(61 * time.Second)
+	_, found = c.Get("key1")
+	assert.False(t, found)
+}

@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"time"
 
@@ -13,6 +13,9 @@ const (
 	NoExpiration      time.Duration = -1
 	DefaultExpiration time.Duration = 0
 )
+
+var ErrItemAlreadyExists error = errors.New("item already exists")
+var ErrItemNotFound error = errors.New("item does not exists")
 
 // Item wrap the user provided value and add data to it
 type Item[V any] struct {
@@ -205,7 +208,7 @@ func (c *Cache[K, V]) set(k K, v V, d time.Duration) {
 
 func (c *Cache[K, V]) add(k K, v V, d time.Duration) error {
 	if _, found := c.get(k); found {
-		return fmt.Errorf("item %v already exists", k)
+		return ErrItemAlreadyExists
 	}
 	c.set(k, v, d)
 	return nil
@@ -213,7 +216,7 @@ func (c *Cache[K, V]) add(k K, v V, d time.Duration) error {
 
 func (c *Cache[K, V]) replace(k K, v V, d time.Duration) error {
 	if _, found := c.get(k); !found {
-		return fmt.Errorf("item %v doesn't exists", k)
+		return ErrItemNotFound
 	}
 	c.set(k, v, d)
 	return nil

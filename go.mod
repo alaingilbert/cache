@@ -1,4 +1,4 @@
-module cache
+module github.com/alaingilbert/cache
 
 go 1.18
 

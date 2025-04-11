@@ -42,7 +42,7 @@ func TestItemIsExpired(t *testing.T) {
 func TestExpireAt(t *testing.T) {
 	clock := clockwork.NewFakeClockAt(time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local))
 	c := New[string](time.Minute, WithClock(clock))
-	c.Set("key1", "val1", ExpireAt(time.Date(2000, 1, 1, 0, 15, 0, 0, time.Local)))
+	c.Set("key1", "val1", ExpireAt(clock.Now().Add(15*time.Minute)))
 	clock.Advance(14 * time.Minute)
 	_, found := c.Get("key1")
 	assert.True(t, found)

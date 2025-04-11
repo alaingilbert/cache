@@ -215,20 +215,15 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 	for _, opt := range opts {
 		opt(cfg)
 	}
-	if cfg.ctx == nil {
-		cfg.ctx = context.Background()
-	}
+	cfg.ctx = Or(cfg.ctx, context.Background())
+	cfg.clock = Or(cfg.clock, clockwork.NewRealClock())
 	cleanupInterval := DefaultCleanupInterval
 	if cfg.cleanupInterval != nil {
 		cleanupInterval = *cfg.cleanupInterval
 	}
-	clock := clockwork.NewRealClock()
-	if cfg.clock != nil {
-		clock = cfg.clock
-	}
 	c := new(Cache[K, V])
 	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
-	c.clock = clock
+	c.clock = cfg.clock
 	c.defaultExpiration = defaultExpiration
 	c.items = make(map[K]Item[V])
 	if cleanupInterval > 0 {
@@ -360,4 +355,17 @@ func (i Item[V]) IsExpired() bool {
 // Given a unix (nano) timestamp, return either or not the item is expired
 func (i Item[V]) isExpired(ts int64) bool {
 	return i.expiration > 0 && i.expiration < ts
+}
+
+// Ternary ...
+func Ternary[T any](predicate bool, a, b T) T {
+	if predicate {
+		return a
+	}
+	return b
+}
+
+// Or return "a" if it is non-zero otherwise "b"
+func Or[T comparable](a, b T) (zero T) {
+	return Ternary(a != zero, a, b)
 }

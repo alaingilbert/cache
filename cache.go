@@ -185,11 +185,16 @@ func (c *Cache[K, V]) Items() map[K]Item[V] {
 	return c.getItems()
 }
 
-func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
-	cfg := &Config{}
+func buildConfigs[C any, F ~func(*C)](opts []F) *C {
+	var cfg C
 	for _, opt := range opts {
-		opt(cfg)
+		opt(&cfg)
 	}
+	return &cfg
+}
+
+func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
+	cfg := buildConfigs(opts)
 	cfg.ctx = Or(cfg.ctx, context.Background())
 	cfg.clock = Or(cfg.clock, clockwork.NewRealClock())
 	cleanupInterval := Default(cfg.cleanupInterval, DefaultCleanupInterval)
@@ -249,10 +254,7 @@ func (c *Cache[K, V]) get(k K) (V, bool) {
 }
 
 func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
-	cfg := &ItemConfig{}
-	for _, opt := range opts {
-		opt(cfg)
-	}
+	cfg := buildConfigs(opts)
 	e := int64(NoExpiration)
 	d := Or(cfg.d, c.defaultExpiration)
 	e = c.clock.Now().Add(d).UnixNano()

@@ -16,7 +16,7 @@ func Or[T comparable](a, b T) (zero T) {
 	return Ternary(a != zero, a, b)
 }
 
-// Default ...
+// Default return the value of "v" if not nil, otherwise return the default "d" value
 func Default[T any](v *T, d T) T {
 	if v == nil {
 		return d

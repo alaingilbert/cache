@@ -246,7 +246,7 @@ func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
 		if item.expiration < now {
 			return zero, time.Time{}, false
 		}
-		e = time.Unix(0, item.expiration)
+		e = item.Expiration()
 	}
 	return item.value, e, found
 }

@@ -217,7 +217,7 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
 	c.clock = cfg.clock
 	c.defaultExpiration = defaultExpiration
-	c.items = NewMap[K, Item[V]]()
+	c.items = NewRWMtxMap[K, Item[V]]()
 	if cleanupInterval > 0 {
 		go c.autoCleanup(cleanupInterval)
 	}

@@ -14,6 +14,7 @@ const (
 	DefaultExpiration time.Duration = 0
 )
 
+// DefaultCleanupInterval is exported so that someone could override the value in their project
 var DefaultCleanupInterval = 10 * time.Minute
 
 var ErrItemAlreadyExists = errors.New("item already exists")

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/alaingilbert/cache/internal/mtx"
 	"github.com/alaingilbert/cache/internal/utils"
+	"reflect"
 	"time"
 
 	"github.com/alaingilbert/clockwork"
@@ -366,4 +367,26 @@ func GetCast[T any, K comparable](c *Cache[K, any], k K) (value T, ok bool) {
 // `if GetTryCast[int]("someKey") {`
 func GetTryCast[T any, K comparable](c *Cache[K, any], k K) (ok bool) {
 	return utils.Second(GetCast[T, K](c, k))
+}
+
+// GetCastInto ...
+func GetCastInto[T any, K comparable](c *Cache[K, any], k K, into *T) bool {
+	origin, found := c.get(k)
+	if !found {
+		return false
+	}
+	originVal, ok := origin.(reflect.Value)
+	if !ok {
+		originVal = reflect.ValueOf(origin)
+	}
+	if originVal.IsValid() {
+		if _, ok := originVal.Interface().(T); ok {
+			rv := reflect.ValueOf(into)
+			if rv.Kind() == reflect.Pointer && !rv.IsNil() {
+				rv.Elem().Set(originVal)
+				return true
+			}
+		}
+	}
+	return false
 }

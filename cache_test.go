@@ -160,3 +160,17 @@ func TestGetTryCast(t *testing.T) {
 	assert.False(t, GetTryCast[string](c2, 2))
 	assert.False(t, GetTryCast[string](c2, 3))
 }
+
+func TestGetCastInto(t *testing.T) {
+	c1 := New[any](time.Minute)
+	c1.Set("key1", "val1")
+	c1.Set("key2", 1)
+	var v1 string
+	var v2 int
+	assert.True(t, GetCastInto[string](c1, "key1", &v1))
+	assert.Equal(t, v1, "val1")
+	assert.False(t, GetCastInto[int](c1, "key1", &v2))
+	assert.Equal(t, v2, 0)
+	assert.True(t, GetCastInto[int](c1, "key2", &v2))
+	assert.Equal(t, v2, 1)
+}

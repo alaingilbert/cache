@@ -3,7 +3,7 @@ module github.com/alaingilbert/cache
 go 1.23
 
 require (
-	github.com/alaingilbert/clockwork v0.1.0
+	github.com/alaingilbert/clockwork v0.0.0-20220821091847-24a25c94a5fe
 	github.com/stretchr/testify v1.10.0
 )
 

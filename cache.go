@@ -142,6 +142,11 @@ func (c *Cache[K, V]) Get(k K) (value V, found bool) {
 	return c.get(k)
 }
 
+// GetOrZero gets a value associated to the given key or the zero value if the key is not found
+func (c *Cache[K, V]) GetOrZero(k K) (value V) {
+	return c.getOrZero(k)
+}
+
 // GetWithExpiration a value and it's expiration
 func (c *Cache[K, V]) GetWithExpiration(k K) (value V, expiration time.Time, found bool) {
 	return c.getWithExpiration(k)
@@ -234,11 +239,6 @@ func (c *Cache[K, V]) destroy() {
 	c.deleteAll()
 }
 
-func (c *Cache[K, V]) has(k K) bool {
-	_, found := c.get(k)
-	return found
-}
-
 func (c *Cache[K, V]) len() int {
 	return c.items.Len()
 }
@@ -263,6 +263,14 @@ func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
 func (c *Cache[K, V]) get(k K) (V, bool) {
 	value, _, found := c.getWithExpiration(k)
 	return value, found
+}
+
+func (c *Cache[K, V]) getOrZero(k K) V {
+	return First(c.get(k))
+}
+
+func (c *Cache[K, V]) has(k K) bool {
+	return Second(c.get(k))
 }
 
 func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
@@ -365,3 +373,7 @@ func Default[T any](v *T, d T) T {
 	}
 	return *v
 }
+
+func First[T any](a T, _ ...any) T { return a }
+
+func Second[T any](_ any, a T, _ ...any) T { return a }

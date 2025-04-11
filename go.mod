@@ -1,6 +1,6 @@
 module github.com/alaingilbert/cache
 
-go 1.18
+go 1.23
 
 require (
 	github.com/alaingilbert/clockwork v0.1.0

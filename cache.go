@@ -66,6 +66,7 @@ func NewWithKey[K comparable, V any](defaultExpiration, cleanupInterval time.Dur
 // Destroy the cache object, cleanup all resources
 func (c *Cache[K, V]) Destroy() {
 	c.cancel()
+	clear(c.items)
 	c = nil
 }
 

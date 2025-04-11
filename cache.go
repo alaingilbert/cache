@@ -98,6 +98,11 @@ func (c *ItemConfig) Duration(d time.Duration) *ItemConfig {
 // ItemOption ...
 type ItemOption func(cfg *ItemConfig)
 
+// NoExpire ...
+func NoExpire(cfg *ItemConfig) {
+	cfg = cfg.Duration(NoExpiration)
+}
+
 // ExpireIn can be used to override the default expiration for a key when calling the Add/Set/Replace methods
 func ExpireIn(d time.Duration) ItemOption {
 	return func(cfg *ItemConfig) {
@@ -255,7 +260,10 @@ func (c *Cache[K, V]) get(k K) (V, bool) {
 func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 	cfg := buildConfigs(opts)
 	d := Or(cfg.d, c.defaultExpiration)
-	e := c.clock.Now().Add(d).UnixNano()
+	e := int64(NoExpiration)
+	if d != NoExpiration {
+		e = c.clock.Now().Add(d).UnixNano()
+	}
 	c.items.SetKey(k, Item[V]{value: v, expiration: e})
 }
 

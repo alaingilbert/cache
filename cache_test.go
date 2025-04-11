@@ -50,6 +50,17 @@ func TestGetExpiredItem(t *testing.T) {
 	assert.False(t, found)
 }
 
+func TestNoExpire(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock))
+	c.Set("key1", "val1", NoExpire)
+	_, found := c.Get("key1")
+	assert.True(t, found)
+	clock.Advance(61 * time.Second)
+	_, found = c.Get("key1")
+	assert.True(t, found)
+}
+
 type TestStruct struct {
 	Num      int
 	Children []*TestStruct

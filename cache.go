@@ -185,9 +185,9 @@ func newCache[K comparable, V any](defaultExpiration, cleanupInterval time.Durat
 func (c *Cache[K, V]) autoCleanup(cleanupInterval time.Duration) {
 	for {
 		select {
+		case <-time.After(cleanupInterval):
 		case <-c.ctx.Done():
 			return
-		case <-time.After(cleanupInterval):
 		}
 		// Important to call the exported method to lock the mutex
 		c.DeleteExpired()

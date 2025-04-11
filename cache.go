@@ -78,7 +78,7 @@ func (c *Cache[K, V]) Has(k K) bool {
 	return found
 }
 
-// Get an value associated to the given key
+// Get a value associated to the given key
 func (c *Cache[K, V]) Get(k K) (V, bool) {
 	c.mtx.RLock()
 	value, found := c.get(k)

@@ -1,5 +1,8 @@
 package utils
 
+// Ptr ...
+func Ptr[T any](v T) *T { return &v }
+
 // Ternary ...
 func Ternary[T any](predicate bool, a, b T) T {
 	if predicate {

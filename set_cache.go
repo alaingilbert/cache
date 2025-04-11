@@ -48,3 +48,7 @@ func (s *SetCache[K]) Has(k K) bool {
 func (s *SetCache[K]) Len() int {
 	return s.c.len()
 }
+
+func (s *SetCache[K]) Destroy() {
+	s.c.destroy()
+}

@@ -86,9 +86,9 @@ func NewWithKey[K comparable, V any](defaultExpiration, cleanupInterval time.Dur
 
 // Destroy the cache object, cleanup all resources
 func (c *Cache[K, V]) Destroy() {
-	c.cancel()
-	clear(c.items)
-	c = nil
+	c.mtx.Lock()
+	c.destroy()
+	c.mtx.Unlock()
 }
 
 // Has returns either or not the key is present in the cache
@@ -213,6 +213,12 @@ func (c *Cache[K, V]) autoCleanup(cleanupInterval time.Duration) {
 		// Important to call the exported method to lock the mutex
 		c.DeleteExpired()
 	}
+}
+
+func (c *Cache[K, V]) destroy() {
+	c.cancel()
+	clear(c.items)
+	c = nil
 }
 
 func (c *Cache[K, V]) has(k K) bool {

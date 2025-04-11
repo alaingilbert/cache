@@ -182,7 +182,7 @@ func (c *Cache[K, V]) DeleteAll() {
 // Len returns the number of items in the cache. This may include items that have
 // expired, but have not yet been cleaned up.
 func (c *Cache[K, V]) Len() int {
-	return c.items.Len()
+	return c.len()
 }
 
 // Items copies all unexpired items in the cache into a new map and returns it.
@@ -237,6 +237,10 @@ func (c *Cache[K, V]) destroy() {
 func (c *Cache[K, V]) has(k K) bool {
 	_, found := c.get(k)
 	return found
+}
+
+func (c *Cache[K, V]) len() int {
+	return c.items.Len()
 }
 
 func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {

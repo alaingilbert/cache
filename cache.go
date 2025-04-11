@@ -30,7 +30,7 @@ type Cache[K comparable, V any] struct {
 	cancel            context.CancelFunc   // Cancel the context and stop the auto-cleanup thread
 	defaultExpiration time.Duration        // Default expiration for items in cache
 	clock             clockwork.Clock      // Clock object for time related features
-	items             RWMtxMap[K, Item[V]] // Hashmap that contains all items in the cache
+	items             RWMtxMap[K, Item[V]] // Mutex protected hashmap that contains all items in the cache
 }
 
 type Config struct {

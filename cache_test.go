@@ -106,3 +106,13 @@ func TestStorePointerToStruct(t *testing.T) {
 	assert.True(t, found)
 	assert.Equal(t, 2, value2.Num)
 }
+
+func TestDeleteAll(t *testing.T) {
+	c := New[string](time.Minute)
+	c.Set("key1", "val1")
+	c.Set("key2", "val2")
+	c.Set("key3", "val3")
+	assert.Equal(t, 3, c.Len())
+	c.DeleteAll()
+	assert.Equal(t, 0, c.Len())
+}

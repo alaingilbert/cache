@@ -14,8 +14,8 @@ const (
 	DefaultExpiration time.Duration = 0
 )
 
-var ErrItemAlreadyExists error = errors.New("item already exists")
-var ErrItemNotFound error = errors.New("item does not exists")
+var ErrItemAlreadyExists = errors.New("item already exists")
+var ErrItemNotFound = errors.New("item does not exists")
 
 // Item wrap the user provided value and add data to it
 type Item[V any] struct {

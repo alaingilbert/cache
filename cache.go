@@ -36,43 +36,6 @@ type Cache[K comparable, V any] struct {
 	items             mtx.RWMtxMap[K, Item[V]] // Mutex protected hashmap that contains all items in the cache
 }
 
-// SetCache ...
-type SetCache[K comparable] struct {
-	c *Cache[K, struct{}]
-}
-
-func (s *SetCache[K]) Add(k K, opts ...ItemOption) error {
-	return s.c.add(k, struct{}{}, opts...)
-}
-
-func (s *SetCache[K]) Set(k K, opts ...ItemOption) {
-	s.c.set(k, struct{}{}, opts...)
-}
-
-func (s *SetCache[K]) Replace(k K, opts ...ItemOption) error {
-	return s.c.replace(k, struct{}{}, opts...)
-}
-
-func (s *SetCache[K]) Delete(k K) {
-	s.c.delete(k)
-}
-
-func (s *SetCache[K]) DeleteAll() {
-	s.c.deleteAll()
-}
-
-func (s *SetCache[K]) DeleteExpired() {
-	s.c.deleteExpired()
-}
-
-func (s *SetCache[K]) Has(k K) bool {
-	return s.c.has(k)
-}
-
-func (s *SetCache[K]) Len() int {
-	return s.c.len()
-}
-
 type Config struct {
 	ctx             context.Context
 	cleanupInterval *time.Duration
@@ -165,11 +128,6 @@ func New[V any](defaultExpiration time.Duration, opts ...Option) *Cache[string, 
 // NewWithKey creates a cache with a custom comparable K provided by the user
 func NewWithKey[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
 	return newCache[K, V](defaultExpiration, opts...)
-}
-
-// NewSet creates a new "set" cache
-func NewSet[K comparable](defaultExpiration time.Duration, opts ...Option) *SetCache[K] {
-	return newSetCache[K](defaultExpiration, opts...)
 }
 
 // Destroy the cache object, cleanup all resources

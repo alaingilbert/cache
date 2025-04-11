@@ -145,6 +145,19 @@ func (c *Cache[K, V]) Get(k K) (value V, found bool) {
 	return c.get(k)
 }
 
+func GetCast[T any, K comparable](c *Cache[K, any], k K) (value T, ok bool) {
+	var zero T
+	v, found := c.get(k)
+	if !found {
+		return zero, false
+	}
+	res, ok := v.(T)
+	if !ok {
+		return zero, false
+	}
+	return res, true
+}
+
 // GetWithExpiration gets a value and its expiration time from the cache.
 // If the item never expires a zero value for time.Time is returned.
 func (c *Cache[K, V]) GetWithExpiration(k K) (value V, expiration time.Time, found bool) {

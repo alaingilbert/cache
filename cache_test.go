@@ -127,3 +127,18 @@ func TestSetCache(t *testing.T) {
 	c.DeleteAll()
 	assert.Equal(t, 0, c.Len())
 }
+
+func TestGetCast(t *testing.T) {
+	c := New[any](time.Minute)
+	c.Set("key1", "val1")
+	c.Set("key2", 1)
+	value1, ok1 := GetCast[int](c, "key1")
+	assert.Equal(t, 0, value1)
+	assert.False(t, ok1)
+	value2, ok2 := GetCast[string](c, "key1")
+	assert.Equal(t, "val1", value2)
+	assert.True(t, ok2)
+	value3, ok3 := GetCast[int](c, "key2")
+	assert.Equal(t, 1, value3)
+	assert.True(t, ok3)
+}

@@ -106,3 +106,24 @@ func TestDeleteAll(t *testing.T) {
 	c.DeleteAll()
 	assert.Equal(t, 0, c.Len())
 }
+
+func TestSetCache(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := NewSet[string](time.Minute, WithClock(clock))
+	c.Set("key1")
+	c.Set("key2")
+	c.Set("key3")
+	assert.Equal(t, 3, c.Len())
+	assert.True(t, c.Has("key1"))
+	assert.False(t, c.Has("key4"))
+	c.Delete("key1")
+	assert.False(t, c.Has("key1"))
+	assert.True(t, c.Has("key2"))
+	clock.Advance(61 * time.Second)
+	assert.False(t, c.Has("key2"))
+	err := c.Add("key2")
+	assert.NoError(t, err)
+	assert.True(t, c.Has("key2"))
+	c.DeleteAll()
+	assert.Equal(t, 0, c.Len())
+}

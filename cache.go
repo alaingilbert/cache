@@ -237,7 +237,7 @@ func (c *Cache[K, V]) len() int {
 func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
 	var zero V
 	now := c.clock.Now().UnixNano()
-	item, found := c.items.GetKey(k)
+	item, found := c.items.Load(k)
 	if !found {
 		return zero, time.Time{}, false
 	}
@@ -272,7 +272,7 @@ func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 	if d != NoExpiration {
 		e = c.clock.Now().Add(d).UnixNano()
 	}
-	c.items.SetKey(k, Item[V]{value: v, expiration: e})
+	c.items.Store(k, Item[V]{value: v, expiration: e})
 }
 
 func (c *Cache[K, V]) add(k K, v V, opts ...ItemOption) error {
@@ -296,7 +296,7 @@ func (c *Cache[K, V]) deleteAll() {
 }
 
 func (c *Cache[K, V]) delete(k K) {
-	c.items.DeleteKey(k)
+	c.items.Delete(k)
 }
 
 func (c *Cache[K, V]) deleteExpired() {

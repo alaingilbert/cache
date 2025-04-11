@@ -49,16 +49,16 @@ func NewRWMtxMap[K comparable, V any]() RWMtxMap[K, V] {
 	return RWMtxMap[K, V]{RWMtx: NewRWMtx(make(map[K]V))}
 }
 
-func (m *RWMtxMap[K, V]) SetKey(k K, v V) {
+func (m *RWMtxMap[K, V]) Store(k K, v V) {
 	m.With(func(m *map[K]V) { (*m)[k] = v })
 }
 
-func (m *RWMtxMap[K, V]) GetKey(k K) (out V, ok bool) {
+func (m *RWMtxMap[K, V]) Load(k K) (out V, ok bool) {
 	m.RWith(func(m map[K]V) { out, ok = m[k] })
 	return
 }
 
-func (m *RWMtxMap[K, V]) DeleteKey(k K) {
+func (m *RWMtxMap[K, V]) Delete(k K) {
 	m.With(func(m *map[K]V) { delete(*m, k) })
 	return
 }

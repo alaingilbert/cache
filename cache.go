@@ -277,7 +277,7 @@ func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 }
 
 func (c *Cache[K, V]) add(k K, v V, opts ...ItemOption) error {
-	if _, found := c.get(k); found {
+	if c.has(k) {
 		return ErrItemAlreadyExists
 	}
 	c.set(k, v, opts...)
@@ -285,7 +285,7 @@ func (c *Cache[K, V]) add(k K, v V, opts ...ItemOption) error {
 }
 
 func (c *Cache[K, V]) replace(k K, v V, opts ...ItemOption) error {
-	if _, found := c.get(k); !found {
+	if !c.has(k) {
 		return ErrItemNotFound
 	}
 	c.set(k, v, opts...)

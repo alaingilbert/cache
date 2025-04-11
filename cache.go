@@ -26,10 +26,10 @@ type Item[V any] struct {
 type Cache[K comparable, V any] struct {
 	ctx               context.Context    // Context is used to stop the auto-cleanup thread
 	cancel            context.CancelFunc // Cancel the context and stop the auto-cleanup thread
-	mtx               sync.RWMutex       // This mutex should only be used in exported methods
 	defaultExpiration time.Duration      // Default expiration for items in cache
-	items             map[K]Item[V]      // Hashmap that contains all items in the cache
 	clock             clockwork.Clock    // Clock object for time related features
+	mtx               sync.RWMutex       // This mutex should only be used in exported methods
+	items             map[K]Item[V]      // Hashmap that contains all items in the cache
 }
 
 type Config struct {

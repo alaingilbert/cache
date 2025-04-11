@@ -53,6 +53,27 @@ func WithContext(ctx context.Context) Option {
 	}
 }
 
+// ItemConfig ...
+type ItemConfig struct {
+	d time.Duration
+}
+
+// Duration ...
+func (c *ItemConfig) Duration(d time.Duration) *ItemConfig {
+	c.d = d
+	return c
+}
+
+// ItemOption ...
+type ItemOption func(cfg *ItemConfig)
+
+// Duration ...
+func Duration(d time.Duration) ItemOption {
+	return func(cfg *ItemConfig) {
+		cfg = cfg.Duration(d)
+	}
+}
+
 // New creates a cache with K as string
 func New[V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[string, V] {
 	return newCache[string, V](defaultExpiration, cleanupInterval, opts...)
@@ -95,26 +116,26 @@ func (c *Cache[K, V]) GetWithExpiration(k K) (V, time.Time, bool) {
 }
 
 // Set a key/value pair in the cache
-func (c *Cache[K, V]) Set(k K, v V, d time.Duration) {
+func (c *Cache[K, V]) Set(k K, v V, opts ...ItemOption) {
 	c.mtx.Lock()
-	c.set(k, v, d)
+	c.set(k, v, opts...)
 	c.mtx.Unlock()
 }
 
 // Add an item to the cache only if an item doesn't already exist for the given
 // key, or if the existing item has expired. Returns an error otherwise.
-func (c *Cache[K, V]) Add(k K, v V, d time.Duration) error {
+func (c *Cache[K, V]) Add(k K, v V, opts ...ItemOption) error {
 	c.mtx.Lock()
-	err := c.add(k, v, d)
+	err := c.add(k, v, opts...)
 	c.mtx.Unlock()
 	return err
 }
 
 // Replace set a new value for the cache key only if it already exists, and the existing
 // item hasn't expired. Returns an error otherwise.
-func (c *Cache[K, V]) Replace(k K, v V, d time.Duration) error {
+func (c *Cache[K, V]) Replace(k K, v V, opts ...ItemOption) error {
 	c.mtx.Lock()
-	err := c.replace(k, v, d)
+	err := c.replace(k, v, opts...)
 	c.mtx.Unlock()
 	return err
 }
@@ -221,8 +242,13 @@ func (c *Cache[K, V]) get(k K) (V, bool) {
 	return value, found
 }
 
-func (c *Cache[K, V]) set(k K, v V, d time.Duration) {
+func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
+	cfg := &ItemConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
 	e := int64(NoExpiration)
+	d := cfg.d
 	if d == DefaultExpiration {
 		d = c.defaultExpiration
 	}
@@ -230,19 +256,19 @@ func (c *Cache[K, V]) set(k K, v V, d time.Duration) {
 	c.items[k] = Item[V]{value: v, expiration: e}
 }
 
-func (c *Cache[K, V]) add(k K, v V, d time.Duration) error {
+func (c *Cache[K, V]) add(k K, v V, opts ...ItemOption) error {
 	if _, found := c.get(k); found {
 		return ErrItemAlreadyExists
 	}
-	c.set(k, v, d)
+	c.set(k, v, opts...)
 	return nil
 }
 
-func (c *Cache[K, V]) replace(k K, v V, d time.Duration) error {
+func (c *Cache[K, V]) replace(k K, v V, opts ...ItemOption) error {
 	if _, found := c.get(k); !found {
 		return ErrItemNotFound
 	}
-	c.set(k, v, d)
+	c.set(k, v, opts...)
 	return nil
 }
 

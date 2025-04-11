@@ -10,7 +10,7 @@ import (
 
 func TestNew(t *testing.T) {
 	c := New[int](time.Minute, time.Minute)
-	c.Set("key1", 1, DefaultExpiration)
+	c.Set("key1", 1, Duration(DefaultExpiration))
 	v, found := c.Get("key1")
 	assert.True(t, found)
 	assert.Equal(t, v, 1)
@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 
 func TestNewWithKey(t *testing.T) {
 	c := NewWithKey[int, int](time.Minute, time.Minute)
-	c.Set(1, 1, DefaultExpiration)
+	c.Set(1, 1, Duration(DefaultExpiration))
 	v, found := c.Get(1)
 	assert.True(t, found)
 	assert.Equal(t, v, 1)
@@ -43,7 +43,7 @@ func TestGetExpiredItem(t *testing.T) {
 	clock := clockwork.NewFakeClock()
 	c := New[string](time.Minute, time.Minute)
 	c.SetClock(clock)
-	c.Set("key1", "val1", DefaultExpiration)
+	c.Set("key1", "val1", Duration(DefaultExpiration))
 	_, found := c.Get("key1")
 	assert.True(t, found)
 	clock.Advance(61 * time.Second)
@@ -58,7 +58,7 @@ type TestStruct struct {
 
 func TestStorePointerToStruct(t *testing.T) {
 	c := New[*TestStruct](time.Minute, time.Minute)
-	c.Set("key1", &TestStruct{Num: 1}, DefaultExpiration)
+	c.Set("key1", &TestStruct{Num: 1}, Duration(DefaultExpiration))
 	value1, found := c.Get("key1")
 	assert.True(t, found)
 	assert.Equal(t, 1, value1.Num)

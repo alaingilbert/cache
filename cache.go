@@ -106,6 +106,13 @@ func ExpireIn(d time.Duration) ItemOption {
 	}
 }
 
+// ExpireAt ...
+func ExpireAt(t time.Time) ItemOption {
+	return func(cfg *ItemConfig) {
+		cfg = cfg.Duration(time.Until(t))
+	}
+}
+
 // New creates a cache with K as string
 func New[V any](defaultExpiration time.Duration, opts ...Option) *Cache[string, V] {
 	return newCache[string, V](defaultExpiration, opts...)

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"time"
@@ -124,7 +123,7 @@ func New[V any](defaultExpiration time.Duration, opts ...Option) *Cache[string, 
 }
 
 // NewWithKey creates a cache with a custom comparable K provided by the user
-func NewWithKey[K cmp.Ordered, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
+func NewWithKey[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
 	return newCache[K, V](defaultExpiration, opts...)
 }
 

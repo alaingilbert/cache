@@ -283,10 +283,7 @@ func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 		opt(cfg)
 	}
 	e := int64(NoExpiration)
-	d := cfg.d
-	if d == DefaultExpiration {
-		d = c.defaultExpiration
-	}
+	d := Or(cfg.d, c.defaultExpiration)
 	e = c.clock.Now().Add(d).UnixNano()
 	c.items[k] = Item[V]{value: v, expiration: e}
 }

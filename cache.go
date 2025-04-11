@@ -254,9 +254,8 @@ func (c *Cache[K, V]) get(k K) (V, bool) {
 
 func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 	cfg := buildConfigs(opts)
-	e := int64(NoExpiration)
 	d := Or(cfg.d, c.defaultExpiration)
-	e = c.clock.Now().Add(d).UnixNano()
+	e := c.clock.Now().Add(d).UnixNano()
 	c.items.SetKey(k, Item[V]{value: v, expiration: e})
 }
 

@@ -147,7 +147,8 @@ func (c *Cache[K, V]) GetOrZero(k K) (value V) {
 	return c.getOrZero(k)
 }
 
-// GetWithExpiration a value and it's expiration
+// GetWithExpiration gets a value and its expiration time from the cache.
+// If the item never expires a zero value for time.Time is returned.
 func (c *Cache[K, V]) GetWithExpiration(k K) (value V, expiration time.Time, found bool) {
 	return c.getWithExpiration(k)
 }

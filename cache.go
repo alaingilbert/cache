@@ -64,7 +64,7 @@ func (c *Config) WithClock(clock clockwork.Clock) *Config {
 
 type Option func(cfg *Config)
 
-// WithContext changes context of the request.
+// WithContext changes context
 func WithContext(ctx context.Context) Option {
 	return func(cfg *Config) {
 		cfg = cfg.WithContext(ctx)

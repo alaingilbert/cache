@@ -229,9 +229,17 @@ func (c *Cache[K, V]) len() int {
 	return c.items.Len()
 }
 
+func (c *Cache[K, V]) now() time.Time {
+	return c.clock.Now()
+}
+
+func (c *Cache[K, V]) nowNano() int64 {
+	return c.now().UnixNano()
+}
+
 func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
 	var zero V
-	now := c.clock.Now().UnixNano()
+	now := c.nowNano()
 	item, found := c.items.Load(k)
 	if !found {
 		return zero, time.Time{}, false
@@ -261,7 +269,7 @@ func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 	d := utils.Or(cfg.d, c.defaultExpiration)
 	e := int64(NoExpiration)
 	if d != NoExpiration {
-		e = c.clock.Now().Add(d).UnixNano()
+		e = c.now().Add(d).UnixNano()
 	}
 	c.items.Store(k, Item[V]{value: v, expiration: e})
 }
@@ -291,7 +299,7 @@ func (c *Cache[K, V]) delete(k K) {
 }
 
 func (c *Cache[K, V]) deleteExpired() {
-	now := c.clock.Now().UnixNano()
+	now := c.nowNano()
 	c.items.With(func(m *map[K]Item[V]) {
 		for k, item := range *m {
 			if item.isExpired(now) {
@@ -302,7 +310,7 @@ func (c *Cache[K, V]) deleteExpired() {
 }
 
 func (c *Cache[K, V]) getItems() (out map[K]Item[V]) {
-	now := c.clock.Now().UnixNano()
+	now := c.nowNano()
 	c.items.RWith(func(m map[K]Item[V]) {
 		out = make(map[K]Item[V], len(m))
 		for k, v := range m {

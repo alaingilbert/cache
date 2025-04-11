@@ -32,19 +32,35 @@ type Cache[K comparable, V any] struct {
 	clock             clockwork.Clock    // Clock object for time related features
 }
 
-// Creates a cache with K as string
-func New[V any](defaultExpiration, cleanupInterval time.Duration) *Cache[string, V] {
-	return newCache[string, V](context.Background(), defaultExpiration, cleanupInterval)
+type Config struct {
+	ctx context.Context
 }
 
-// Creates a cache with a context provided by the user
-func NewWithContext[V any](ctx context.Context, defaultExpiration, cleanupInterval time.Duration) *Cache[string, V] {
-	return newCache[string, V](ctx, defaultExpiration, cleanupInterval)
+func (c *Config) WithContext(ctx context.Context) *Config {
+	if ctx == nil {
+		panic("nil context")
+	}
+	c.ctx = ctx
+	return c
 }
 
-// Create a cache with a custom comparable K provided by the user
-func NewWithKey[K comparable, V any](defaultExpiration, cleanupInterval time.Duration) *Cache[K, V] {
-	return newCache[K, V](context.Background(), defaultExpiration, cleanupInterval)
+type Option func(cfg *Config)
+
+// WithContext changes context of the request.
+func WithContext(ctx context.Context) Option {
+	return func(cfg *Config) {
+		cfg = cfg.WithContext(ctx)
+	}
+}
+
+// New creates a cache with K as string
+func New[V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[string, V] {
+	return newCache[string, V](defaultExpiration, cleanupInterval, opts...)
+}
+
+// NewWithKey creates a cache with a custom comparable K provided by the user
+func NewWithKey[K comparable, V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[K, V] {
+	return newCache[K, V](defaultExpiration, cleanupInterval, opts...)
 }
 
 // Destroy the cache object, cleanup all resources
@@ -145,10 +161,17 @@ func (c *Cache[K, V]) SetClock(clock clockwork.Clock) {
 	c.clock = clock
 }
 
-func newCache[K comparable, V any](ctx context.Context, defaultExpiration, cleanupInterval time.Duration) *Cache[K, V] {
+func newCache[K comparable, V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[K, V] {
+	cfg := &Config{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+	if cfg.ctx == nil {
+		cfg.ctx = context.Background()
+	}
 	items := make(map[K]Item[V])
 	c := new(Cache[K, V])
-	c.ctx, c.cancel = context.WithCancel(ctx)
+	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
 	c.clock = clockwork.NewRealClock()
 	c.defaultExpiration = defaultExpiration
 	c.items = items

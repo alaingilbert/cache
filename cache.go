@@ -86,7 +86,8 @@ func WithClock(clock clockwork.Clock) Option {
 
 // ItemConfig ...
 type ItemConfig struct {
-	d time.Duration
+	d     time.Duration
+	clock clockwork.Clock
 }
 
 // Duration ...
@@ -113,7 +114,7 @@ func ExpireIn(d time.Duration) ItemOption {
 // ExpireAt ...
 func ExpireAt(t time.Time) ItemOption {
 	return func(cfg *ItemConfig) {
-		cfg = cfg.Duration(time.Until(t))
+		cfg = cfg.Duration(cfg.clock.Until(t))
 	}
 }
 
@@ -258,7 +259,11 @@ func (c *Cache[K, V]) get(k K) (V, bool) {
 }
 
 func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
-	cfg := buildConfigs(opts)
+	cfg := &ItemConfig{}
+	cfg.clock = c.clock
+	for _, opt := range opts {
+		opt(cfg)
+	}
 	d := Or(cfg.d, c.defaultExpiration)
 	e := int64(NoExpiration)
 	if d != NoExpiration {

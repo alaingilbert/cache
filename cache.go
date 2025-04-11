@@ -211,9 +211,7 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 }
 
 func newSetCache[K comparable](defaultExpiration time.Duration, opts ...Option) *SetCache[K] {
-	return &SetCache[K]{
-		c: newCache[K, struct{}](defaultExpiration, opts...),
-	}
+	return &SetCache[K]{c: newCache[K, struct{}](defaultExpiration, opts...)}
 }
 
 func (c *Cache[K, V]) autoCleanup(cleanupInterval time.Duration) {

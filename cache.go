@@ -3,6 +3,8 @@ package cache
 import (
 	"context"
 	"errors"
+	"github.com/alaingilbert/cache/internal/mtx"
+	"github.com/alaingilbert/cache/internal/utils"
 	"time"
 
 	"github.com/alaingilbert/clockwork"
@@ -26,11 +28,11 @@ type Item[V any] struct {
 }
 
 type Cache[K comparable, V any] struct {
-	ctx               context.Context      // Context is used to stop the auto-cleanup thread
-	cancel            context.CancelFunc   // Cancel the context and stop the auto-cleanup thread
-	defaultExpiration time.Duration        // Default expiration for items in cache
-	clock             clockwork.Clock      // Clock object for time related features
-	items             RWMtxMap[K, Item[V]] // Mutex protected hashmap that contains all items in the cache
+	ctx               context.Context          // Context is used to stop the auto-cleanup thread
+	cancel            context.CancelFunc       // Cancel the context and stop the auto-cleanup thread
+	defaultExpiration time.Duration            // Default expiration for items in cache
+	clock             clockwork.Clock          // Clock object for time related features
+	items             mtx.RWMtxMap[K, Item[V]] // Mutex protected hashmap that contains all items in the cache
 }
 
 type Config struct {
@@ -197,15 +199,15 @@ func (c *Cache[K, V]) Items() map[K]Item[V] {
 }
 
 func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
-	cfg := buildConfig(opts)
-	cfg.ctx = Or(cfg.ctx, context.Background())
-	cfg.clock = Or(cfg.clock, clockwork.NewRealClock())
-	cleanupInterval := Default(cfg.cleanupInterval, DefaultCleanupInterval)
+	cfg := utils.BuildConfig(opts)
+	cfg.ctx = utils.Or(cfg.ctx, context.Background())
+	cfg.clock = utils.Or(cfg.clock, clockwork.NewRealClock())
+	cleanupInterval := utils.Default(cfg.cleanupInterval, DefaultCleanupInterval)
 	c := new(Cache[K, V])
 	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
 	c.clock = cfg.clock
 	c.defaultExpiration = defaultExpiration
-	c.items = NewRWMtxMap[K, Item[V]]()
+	c.items = mtx.NewRWMtxMap[K, Item[V]]()
 	if cleanupInterval > 0 {
 		go c.autoCleanup(cleanupInterval)
 	}
@@ -255,17 +257,17 @@ func (c *Cache[K, V]) get(k K) (V, bool) {
 }
 
 func (c *Cache[K, V]) getOrZero(k K) V {
-	return First(c.get(k))
+	return utils.First(c.get(k))
 }
 
 func (c *Cache[K, V]) has(k K) bool {
-	return Second(c.get(k))
+	return utils.Second(c.get(k))
 }
 
 func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 	cfg := &ItemConfig{clock: c.clock}
-	applyOptions(cfg, opts)
-	d := Or(cfg.d, c.defaultExpiration)
+	utils.ApplyOptions(cfg, opts)
+	d := utils.Or(cfg.d, c.defaultExpiration)
 	e := int64(NoExpiration)
 	if d != NoExpiration {
 		e = c.clock.Now().Add(d).UnixNano()

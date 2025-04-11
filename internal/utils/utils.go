@@ -1,4 +1,4 @@
-package cache
+package utils
 
 // Ternary ...
 func Ternary[T any](predicate bool, a, b T) T {
@@ -25,12 +25,12 @@ func First[T any](a T, _ ...any) T { return a }
 
 func Second[T any](_ any, a T, _ ...any) T { return a }
 
-func buildConfig[C any, F ~func(*C)](opts []F) *C {
+func BuildConfig[C any, F ~func(*C)](opts []F) *C {
 	var cfg C
-	return applyOptions(&cfg, opts)
+	return ApplyOptions(&cfg, opts)
 }
 
-func applyOptions[C any, F ~func(*C)](cfg *C, opts []F) *C {
+func ApplyOptions[C any, F ~func(*C)](cfg *C, opts []F) *C {
 	for _, opt := range opts {
 		opt(cfg)
 	}

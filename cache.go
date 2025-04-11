@@ -247,7 +247,6 @@ func (c *Cache[K, V]) autoCleanup(cleanupInterval time.Duration) {
 func (c *Cache[K, V]) destroy() {
 	c.cancel()
 	clear(c.items)
-	c = nil
 }
 
 func (c *Cache[K, V]) has(k K) bool {

@@ -142,3 +142,13 @@ func TestGetCast(t *testing.T) {
 	assert.Equal(t, 1, value3)
 	assert.True(t, ok3)
 }
+
+func TestGetTryCast(t *testing.T) {
+	c := New[any](time.Minute)
+	c.Set("key1", "val1")
+	c.Set("key2", 1)
+	assert.True(t, GetTryCast[string](c, "key1"))
+	assert.True(t, GetTryCast[int](c, "key2"))
+	assert.False(t, GetTryCast[string](c, "key2"))
+	assert.False(t, GetTryCast[string](c, "key3"))
+}

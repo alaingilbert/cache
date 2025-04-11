@@ -12,21 +12,15 @@ import (
 )
 
 func main() {
-	// Create a cache of "string" with a default expiration time of 5 minutes, and which
-	// purges expired items every 10 minutes
-	c := cache.New[string](5*time.Minute, 10*time.Minute)
-    
-	c.Set("key1", "val1", cache.DefaultExpiration)
-    
-	c.Set("key2", "val2", cache.NoExpiration)
-
+	// Create a cache of "string" with a default expiration time of 5 minutes
+	c := cache.New[string](5*time.Minute)
+	c.Set("key1", "val1")
+	c.Set("key2", "val2")
 	found := c.Has("key1")
-
 	value, found := c.Get("key1")
 	if found {
 		fmt.Println(value)
 	}
-
 	c.Delete("key1")
 }
 ```

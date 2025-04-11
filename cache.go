@@ -307,8 +307,17 @@ func (c *Cache[K, V]) deleteExpired() {
 	})
 }
 
-func (c *Cache[K, V]) getItems() map[K]Item[V] {
-	return c.items.Clone()
+func (c *Cache[K, V]) getItems() (out map[K]Item[V]) {
+	now := c.clock.Now().UnixNano()
+	c.items.RWith(func(m map[K]Item[V]) {
+		out = make(map[K]Item[V], len(m))
+		for k, v := range m {
+			if !v.isExpired(now) {
+				out[k] = v
+			}
+		}
+	})
+	return out
 }
 
 // Value returns the value contained by the item

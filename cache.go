@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/alaingilbert/cache/internal/mtx"
 	"github.com/alaingilbert/cache/internal/utils"
-	"reflect"
 	"time"
 
 	"github.com/alaingilbert/clockwork"
@@ -352,15 +351,11 @@ func (i Item[V]) isExpired(ts int64) bool {
 // GetCast ...
 func GetCast[T any, K comparable](c *Cache[K, any], k K) (value T, ok bool) {
 	var zero T
-	v, found := c.get(k)
+	origin, found := c.get(k)
 	if !found {
 		return zero, false
 	}
-	res, ok := v.(T)
-	if !ok {
-		return zero, false
-	}
-	return res, true
+	return utils.Cast[T](origin)
 }
 
 // GetTryCast useful if you want to test if a key exists and is of a specific type
@@ -375,18 +370,5 @@ func GetCastInto[T any, K comparable](c *Cache[K, any], k K, into *T) bool {
 	if !found {
 		return false
 	}
-	originVal, ok := origin.(reflect.Value)
-	if !ok {
-		originVal = reflect.ValueOf(origin)
-	}
-	if originVal.IsValid() {
-		if _, ok := originVal.Interface().(T); ok {
-			rv := reflect.ValueOf(into)
-			if rv.Kind() == reflect.Pointer && !rv.IsNil() {
-				rv.Elem().Set(originVal)
-				return true
-			}
-		}
-	}
-	return false
+	return utils.CastInto[T](origin, into)
 }

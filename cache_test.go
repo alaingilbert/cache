@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -132,6 +133,7 @@ func TestGetCast(t *testing.T) {
 	c := New[any](time.Minute)
 	c.Set("key1", "val1")
 	c.Set("key2", 1)
+	c.Set("key3", reflect.ValueOf(int64(1)))
 	value1, ok1 := GetCast[int](c, "key1")
 	assert.Equal(t, 0, value1)
 	assert.False(t, ok1)
@@ -141,6 +143,9 @@ func TestGetCast(t *testing.T) {
 	value3, ok3 := GetCast[int](c, "key2")
 	assert.Equal(t, 1, value3)
 	assert.True(t, ok3)
+	value4, ok4 := GetCast[int64](c, "key3")
+	assert.Equal(t, int64(1), value4)
+	assert.True(t, ok4)
 }
 
 func TestGetTryCast(t *testing.T) {
@@ -165,12 +170,16 @@ func TestGetCastInto(t *testing.T) {
 	c1 := New[any](time.Minute)
 	c1.Set("key1", "val1")
 	c1.Set("key2", 1)
+	c1.Set("key3", reflect.ValueOf(int64(1)))
 	var v1 string
 	var v2 int
+	var v3 int64
 	assert.True(t, GetCastInto[string](c1, "key1", &v1))
-	assert.Equal(t, v1, "val1")
+	assert.Equal(t, "val1", v1)
 	assert.False(t, GetCastInto[int](c1, "key1", &v2))
-	assert.Equal(t, v2, 0)
+	assert.Equal(t, 0, v2)
 	assert.True(t, GetCastInto[int](c1, "key2", &v2))
-	assert.Equal(t, v2, 1)
+	assert.Equal(t, 1, v2)
+	assert.True(t, GetCastInto[int64](c1, "key3", &v3))
+	assert.Equal(t, int64(1), v3)
 }

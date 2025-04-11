@@ -14,6 +14,8 @@ const (
 	DefaultExpiration time.Duration = 0
 )
 
+var DefaultCleanupInterval = 10 * time.Minute
+
 var ErrItemAlreadyExists = errors.New("item already exists")
 var ErrItemNotFound = errors.New("item does not exists")
 
@@ -33,7 +35,8 @@ type Cache[K comparable, V any] struct {
 }
 
 type Config struct {
-	ctx context.Context
+	ctx             context.Context
+	cleanupInterval *time.Duration
 }
 
 func (c *Config) WithContext(ctx context.Context) *Config {
@@ -44,12 +47,26 @@ func (c *Config) WithContext(ctx context.Context) *Config {
 	return c
 }
 
+func (c *Config) CleanupInterval(cleanupInterval time.Duration) *Config {
+	if cleanupInterval != 0 {
+		c.cleanupInterval = &cleanupInterval
+	}
+	return c
+}
+
 type Option func(cfg *Config)
 
 // WithContext changes context of the request.
 func WithContext(ctx context.Context) Option {
 	return func(cfg *Config) {
 		cfg = cfg.WithContext(ctx)
+	}
+}
+
+// CleanupInterval changes the cleanup interval
+func CleanupInterval(cleanupInterval time.Duration) Option {
+	return func(cfg *Config) {
+		cfg = cfg.CleanupInterval(cleanupInterval)
 	}
 }
 
@@ -67,21 +84,21 @@ func (c *ItemConfig) Duration(d time.Duration) *ItemConfig {
 // ItemOption ...
 type ItemOption func(cfg *ItemConfig)
 
-// Duration can be used to override the default expiration for a key when calling the Add/Set/Replace methods
-func Duration(d time.Duration) ItemOption {
+// ExpireIn can be used to override the default expiration for a key when calling the Add/Set/Replace methods
+func ExpireIn(d time.Duration) ItemOption {
 	return func(cfg *ItemConfig) {
 		cfg = cfg.Duration(d)
 	}
 }
 
 // New creates a cache with K as string
-func New[V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[string, V] {
-	return newCache[string, V](defaultExpiration, cleanupInterval, opts...)
+func New[V any](defaultExpiration time.Duration, opts ...Option) *Cache[string, V] {
+	return newCache[string, V](defaultExpiration, opts...)
 }
 
 // NewWithKey creates a cache with a custom comparable K provided by the user
-func NewWithKey[K comparable, V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[K, V] {
-	return newCache[K, V](defaultExpiration, cleanupInterval, opts...)
+func NewWithKey[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
+	return newCache[K, V](defaultExpiration, opts...)
 }
 
 // Destroy the cache object, cleanup all resources
@@ -183,7 +200,7 @@ func (c *Cache[K, V]) SetClock(clock clockwork.Clock) {
 	c.clock = clock
 }
 
-func newCache[K comparable, V any](defaultExpiration, cleanupInterval time.Duration, opts ...Option) *Cache[K, V] {
+func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
 	cfg := &Config{}
 	for _, opt := range opts {
 		opt(cfg)
@@ -191,12 +208,15 @@ func newCache[K comparable, V any](defaultExpiration, cleanupInterval time.Durat
 	if cfg.ctx == nil {
 		cfg.ctx = context.Background()
 	}
-	items := make(map[K]Item[V])
+	cleanupInterval := DefaultCleanupInterval
+	if cfg.cleanupInterval != nil {
+		cleanupInterval = *cfg.cleanupInterval
+	}
 	c := new(Cache[K, V])
 	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
 	c.clock = clockwork.NewRealClock()
 	c.defaultExpiration = defaultExpiration
-	c.items = items
+	c.items = make(map[K]Item[V])
 	if cleanupInterval > 0 {
 		go c.autoCleanup(cleanupInterval)
 	}

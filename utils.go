@@ -24,3 +24,15 @@ func Default[T any](v *T, d T) T {
 func First[T any](a T, _ ...any) T { return a }
 
 func Second[T any](_ any, a T, _ ...any) T { return a }
+
+func buildConfig[C any, F ~func(*C)](opts []F) *C {
+	var cfg C
+	return applyOptions(&cfg, opts)
+}
+
+func applyOptions[C any, F ~func(*C)](cfg *C, opts []F) *C {
+	for _, opt := range opts {
+		opt(cfg)
+	}
+	return cfg
+}

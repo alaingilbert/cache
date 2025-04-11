@@ -210,7 +210,7 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 	return c
 }
 
-func newSetCache[K comparable](defaultExpiration time.Duration, opts ...Option) *SetCache[K] {
+func newSet[K comparable](defaultExpiration time.Duration, opts ...Option) *SetCache[K] {
 	return &SetCache[K]{c: newCache[K, struct{}](defaultExpiration, opts...)}
 }
 

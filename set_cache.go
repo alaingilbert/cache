@@ -9,7 +9,7 @@ type SetCache[K comparable] struct {
 
 // NewSet creates a new "set" cache
 func NewSet[K comparable](defaultExpiration time.Duration, opts ...Option) *SetCache[K] {
-	return newSetCache[K](defaultExpiration, opts...)
+	return newSet[K](defaultExpiration, opts...)
 }
 
 func (s *SetCache[K]) GetExpiration(k K) (expiration time.Time, found bool) {

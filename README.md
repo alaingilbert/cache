@@ -17,10 +17,17 @@ func main() {
 	c.Set("key1", "val1")
 	c.Set("key2", "val2")
 	found := c.Has("key1")
-	value, found := c.Get("key1")
-	if found {
+	if value, found := c.Get("key1"); found {
 		fmt.Println(value)
 	}
 	c.Delete("key1")
+	
+	// Can also use a "Set" for cache
+	s := cache.NewSet[string](5*time.Minute)
+	s.Set("key1")
+    if s.Has("key1") {
+        fmt.Println("found key1")
+    }
+    c.Delete("key1")
 }
 ```

@@ -37,6 +37,7 @@ type Cache[K comparable, V any] struct {
 type Config struct {
 	ctx             context.Context
 	cleanupInterval *time.Duration
+	clock           clockwork.Clock
 }
 
 func (c *Config) WithContext(ctx context.Context) *Config {
@@ -54,6 +55,13 @@ func (c *Config) CleanupInterval(cleanupInterval time.Duration) *Config {
 	return c
 }
 
+func (c *Config) WithClock(clock clockwork.Clock) *Config {
+	if clock != nil {
+		c.clock = clock
+	}
+	return c
+}
+
 type Option func(cfg *Config)
 
 // WithContext changes context of the request.
@@ -67,6 +75,13 @@ func WithContext(ctx context.Context) Option {
 func CleanupInterval(cleanupInterval time.Duration) Option {
 	return func(cfg *Config) {
 		cfg = cfg.CleanupInterval(cleanupInterval)
+	}
+}
+
+// WithClock changes the clock
+func WithClock(clock clockwork.Clock) Option {
+	return func(cfg *Config) {
+		cfg = cfg.WithClock(clock)
 	}
 }
 
@@ -195,11 +210,6 @@ func (c *Cache[K, V]) Items() map[K]Item[V] {
 	return items
 }
 
-// SetClock set the clock object
-func (c *Cache[K, V]) SetClock(clock clockwork.Clock) {
-	c.clock = clock
-}
-
 func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Option) *Cache[K, V] {
 	cfg := &Config{}
 	for _, opt := range opts {
@@ -212,9 +222,13 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 	if cfg.cleanupInterval != nil {
 		cleanupInterval = *cfg.cleanupInterval
 	}
+	clock := clockwork.NewRealClock()
+	if cfg.clock != nil {
+		clock = cfg.clock
+	}
 	c := new(Cache[K, V])
 	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
-	c.clock = clockwork.NewRealClock()
+	c.clock = clock
 	c.defaultExpiration = defaultExpiration
 	c.items = make(map[K]Item[V])
 	if cleanupInterval > 0 {

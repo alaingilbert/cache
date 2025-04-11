@@ -192,10 +192,7 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 	}
 	cfg.ctx = Or(cfg.ctx, context.Background())
 	cfg.clock = Or(cfg.clock, clockwork.NewRealClock())
-	cleanupInterval := DefaultCleanupInterval
-	if cfg.cleanupInterval != nil {
-		cleanupInterval = *cfg.cleanupInterval
-	}
+	cleanupInterval := Default(cfg.cleanupInterval, DefaultCleanupInterval)
 	c := new(Cache[K, V])
 	c.ctx, c.cancel = context.WithCancel(cfg.ctx)
 	c.clock = cfg.clock
@@ -333,4 +330,12 @@ func Ternary[T any](predicate bool, a, b T) T {
 // Or return "a" if it is non-zero otherwise "b"
 func Or[T comparable](a, b T) (zero T) {
 	return Ternary(a != zero, a, b)
+}
+
+// Default ...
+func Default[T any](v *T, d T) T {
+	if v == nil {
+		return d
+	}
+	return *v
 }

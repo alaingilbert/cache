@@ -44,22 +44,18 @@ func TestExpireAt(t *testing.T) {
 	c := New[string](time.Minute, WithClock(clock))
 	c.Set("key1", "val1", ExpireAt(clock.Now().Add(15*time.Minute)))
 	clock.Advance(14 * time.Minute)
-	_, found := c.Get("key1")
-	assert.True(t, found)
+	assert.True(t, c.Has("key1"))
 	clock.Advance(2 * time.Minute)
-	_, found = c.Get("key1")
-	assert.False(t, found)
+	assert.False(t, c.Has("key1"))
 }
 
 func TestGetExpiredItem(t *testing.T) {
 	clock := clockwork.NewFakeClock()
 	c := New[string](time.Minute, WithClock(clock))
 	c.Set("key1", "val1")
-	_, found := c.Get("key1")
-	assert.True(t, found)
+	assert.True(t, c.Has("key1"))
 	clock.Advance(61 * time.Second)
-	_, found = c.Get("key1")
-	assert.False(t, found)
+	assert.False(t, c.Has("key1"))
 }
 
 func TestOverrideDefaultExpiration(t *testing.T) {
@@ -67,27 +63,21 @@ func TestOverrideDefaultExpiration(t *testing.T) {
 	c := New[string](time.Minute, WithClock(clock))
 	c.Set("key1", "val1", ExpireIn(5*time.Second))
 	c.Set("key2", "val2")
-	_, found := c.Get("key1")
-	assert.True(t, found)
+	assert.True(t, c.Has("key1"))
 	clock.Advance(4 * time.Second)
-	_, found = c.Get("key1")
-	assert.True(t, found)
+	assert.True(t, c.Has("key1"))
 	clock.Advance(2 * time.Second)
-	_, found = c.Get("key1")
-	assert.False(t, found)
-	_, found = c.Get("key2")
-	assert.True(t, found)
+	assert.False(t, c.Has("key1"))
+	assert.True(t, c.Has("key2"))
 }
 
 func TestNoExpire(t *testing.T) {
 	clock := clockwork.NewFakeClock()
 	c := New[string](time.Minute, WithClock(clock))
 	c.Set("key1", "val1", NoExpire)
-	_, found := c.Get("key1")
-	assert.True(t, found)
+	assert.True(t, c.Has("key1"))
 	clock.Advance(61 * time.Second)
-	_, found = c.Get("key1")
-	assert.True(t, found)
+	assert.True(t, c.Has("key1"))
 }
 
 type TestStruct struct {

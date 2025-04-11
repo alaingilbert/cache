@@ -67,7 +67,7 @@ func (c *ItemConfig) Duration(d time.Duration) *ItemConfig {
 // ItemOption ...
 type ItemOption func(cfg *ItemConfig)
 
-// Duration ...
+// Duration can be used to override the default expiration for a key when calling the Add/Set/Replace methods
 func Duration(d time.Duration) ItemOption {
 	return func(cfg *ItemConfig) {
 		cfg = cfg.Duration(d)

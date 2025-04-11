@@ -50,6 +50,23 @@ func TestGetExpiredItem(t *testing.T) {
 	assert.False(t, found)
 }
 
+func TestOverrideDefaultExpiration(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock))
+	c.Set("key1", "val1", ExpireIn(5*time.Second))
+	c.Set("key2", "val2")
+	_, found := c.Get("key1")
+	assert.True(t, found)
+	clock.Advance(4 * time.Second)
+	_, found = c.Get("key1")
+	assert.True(t, found)
+	clock.Advance(2 * time.Second)
+	_, found = c.Get("key1")
+	assert.False(t, found)
+	_, found = c.Get("key2")
+	assert.True(t, found)
+}
+
 func TestNoExpire(t *testing.T) {
 	clock := clockwork.NewFakeClock()
 	c := New[string](time.Minute, WithClock(clock))

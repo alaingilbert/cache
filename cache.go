@@ -56,9 +56,10 @@ func (c *Config) CleanupInterval(cleanupInterval time.Duration) *Config {
 }
 
 func (c *Config) WithClock(clock clockwork.Clock) *Config {
-	if clock != nil {
-		c.clock = clock
+	if clock == nil {
+		panic("nil clock")
 	}
+	c.clock = clock
 	return c
 }
 

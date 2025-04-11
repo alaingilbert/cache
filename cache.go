@@ -216,8 +216,7 @@ func (c *Cache[K, V]) autoCleanup(cleanupInterval time.Duration) {
 		case <-c.ctx.Done():
 			return
 		}
-		// Important to call the exported method to lock the mutex
-		c.DeleteExpired()
+		c.deleteExpired()
 	}
 }
 

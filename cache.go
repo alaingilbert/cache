@@ -40,10 +40,9 @@ type Config struct {
 }
 
 func (c *Config) WithContext(ctx context.Context) *Config {
-	if ctx == nil {
-		panic("nil context")
+	if ctx != nil {
+		c.ctx = ctx
 	}
-	c.ctx = ctx
 	return c
 }
 
@@ -55,10 +54,9 @@ func (c *Config) CleanupInterval(cleanupInterval time.Duration) *Config {
 }
 
 func (c *Config) WithClock(clock clockwork.Clock) *Config {
-	if clock == nil {
-		panic("nil clock")
+	if clock != nil {
+		c.clock = clock
 	}
-	c.clock = clock
 	return c
 }
 

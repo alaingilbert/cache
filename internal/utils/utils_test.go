@@ -38,3 +38,11 @@ func TestDefault(t *testing.T) {
 	assert.Equal(t, 1, Default((*int)(nil), 1))
 	assert.Equal(t, 2, Default(Ptr(2), 1))
 }
+
+func TestFirst(t *testing.T) {
+	assert.Equal(t, 1, First(1, 2, 3, 4))
+}
+
+func TestSecond(t *testing.T) {
+	assert.Equal(t, 2, Second(1, 2, 3, 4))
+}

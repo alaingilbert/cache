@@ -24,8 +24,10 @@ func Default[T any](v *T, d T) T {
 	return *v
 }
 
+// First returns the first argument
 func First[T any](a T, _ ...any) T { return a }
 
+// Second returns the second argument
 func Second[T any](_ any, a T, _ ...any) T { return a }
 
 func BuildConfig[C any, F ~func(*C)](opts []F) *C {

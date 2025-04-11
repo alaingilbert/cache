@@ -144,11 +144,19 @@ func TestGetCast(t *testing.T) {
 }
 
 func TestGetTryCast(t *testing.T) {
-	c := New[any](time.Minute)
-	c.Set("key1", "val1")
-	c.Set("key2", 1)
-	assert.True(t, GetTryCast[string](c, "key1"))
-	assert.True(t, GetTryCast[int](c, "key2"))
-	assert.False(t, GetTryCast[string](c, "key2"))
-	assert.False(t, GetTryCast[string](c, "key3"))
+	c1 := New[any](time.Minute)
+	c1.Set("key1", "val1")
+	c1.Set("key2", 1)
+	assert.True(t, GetTryCast[string](c1, "key1"))
+	assert.True(t, GetTryCast[int](c1, "key2"))
+	assert.False(t, GetTryCast[string](c1, "key2"))
+	assert.False(t, GetTryCast[string](c1, "key3"))
+
+	c2 := NewWithKey[int, any](time.Minute)
+	c2.Set(1, "val1")
+	c2.Set(2, 1)
+	assert.True(t, GetTryCast[string](c2, 1))
+	assert.True(t, GetTryCast[int](c2, 2))
+	assert.False(t, GetTryCast[string](c2, 2))
+	assert.False(t, GetTryCast[string](c2, 3))
 }

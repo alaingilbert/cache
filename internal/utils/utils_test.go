@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
 
@@ -45,4 +46,40 @@ func TestFirst(t *testing.T) {
 
 func TestSecond(t *testing.T) {
 	assert.Equal(t, 2, Second(1, 2, 3, 4))
+}
+
+func TestCast(t *testing.T) {
+	var origin any = "test1"
+	v, ok := Cast[string](origin)
+	assert.True(t, ok)
+	assert.Equal(t, "test1", v)
+	v1, ok1 := Cast[int](origin)
+	assert.False(t, ok1)
+	assert.Equal(t, 0, v1)
+}
+
+func TestCastInto(t *testing.T) {
+	origin := reflect.ValueOf("test1")
+	var into string
+	assert.True(t, CastInto(origin, &into))
+	assert.Equal(t, "test1", into)
+
+	origin1 := "test1"
+	var into1 string
+	assert.True(t, CastInto(origin1, &into1))
+	assert.Equal(t, "test1", into1)
+
+	origin2 := "test1"
+	var into2 int
+	assert.False(t, CastInto(origin2, &into2))
+	assert.Equal(t, 0, into2)
+}
+
+func TestTryCast(t *testing.T) {
+	var i any = Ptr(1)
+	assert.True(t, TryCast[*int](i))
+
+	var j any = reflect.ValueOf(Ptr(1))
+	assert.True(t, TryCast[*int](j))
+	assert.Equal(t, Ptr(1), j.(reflect.Value).Interface())
 }

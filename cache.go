@@ -337,33 +337,6 @@ func (c *Cache[K, V]) getItems() (out map[K]Item[V]) {
 	return out
 }
 
-// Item wrap the user provided value and add data to it
-type Item[V any] struct {
-	value      V
-	expiration int64
-}
-
-// Value returns the value contained by the item
-func (c Item[V]) Value() V {
-	return c.value
-}
-
-// Expiration returns the expiration time
-func (c Item[V]) Expiration() time.Time {
-	return time.Unix(0, c.expiration)
-}
-
-// IsExpired returns either or not the item is expired right now
-func (c Item[V]) IsExpired() bool {
-	now := time.Now().UnixNano()
-	return c.isExpired(now)
-}
-
-// Given a unix (nano) timestamp, return either or not the item is expired
-func (c Item[V]) isExpired(ts int64) bool {
-	return c.expiration > 0 && c.expiration < ts
-}
-
 // GetCast ...
 func GetCast[T any, K comparable](c *Cache[K, any], k K) (value T, ok bool) {
 	var zero T

@@ -5,9 +5,8 @@ import (
 	"errors"
 	"github.com/alaingilbert/cache/internal/mtx"
 	"github.com/alaingilbert/cache/internal/utils"
-	"time"
-
 	"github.com/alaingilbert/clockwork"
+	"time"
 )
 
 const (

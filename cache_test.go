@@ -2,14 +2,12 @@ package cache
 
 import (
 	"context"
+	"github.com/alaingilbert/cache/internal/utils"
+	"github.com/alaingilbert/clockwork"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/alaingilbert/cache/internal/utils"
-
-	"github.com/alaingilbert/clockwork"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {

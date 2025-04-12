@@ -33,7 +33,7 @@ type Cache[K comparable, V any] struct {
 	defaultExpiration time.Duration            // Default expiration for items in cache
 	clock             clockwork.Clock          // Clock object for time related features
 	items             mtx.RWMtxMap[K, Item[V]] // Mutex protected hashmap that contains all items in the cache
-	cleanupEvent      chan struct{}            // Notifies that a cleanup cycle has been completed (for tests)
+	cleanupEventsCh   chan struct{}            // Notifies that a cleanup cycle has been completed (for tests)
 }
 
 // Config ...
@@ -209,7 +209,7 @@ func newCache[K comparable, V any](defaultExpiration time.Duration, opts ...Opti
 	c.clock = cfg.clock
 	c.defaultExpiration = defaultExpiration
 	c.items = mtx.NewRWMtxMap[K, Item[V]]()
-	c.cleanupEvent = make(chan struct{})
+	c.cleanupEventsCh = make(chan struct{})
 	if cleanupInterval > 0 {
 		go c.autoCleanup(cleanupInterval)
 	}
@@ -229,7 +229,7 @@ func (c *Cache[K, V]) autoCleanup(cleanupInterval time.Duration) {
 		}
 		c.deleteExpired()
 		select {
-		case c.cleanupEvent <- struct{}{}:
+		case c.cleanupEventsCh <- struct{}{}:
 		default:
 		}
 	}

@@ -180,7 +180,7 @@ func TestAutoClean(t *testing.T) {
 	c.Set("key1", "val1")
 	assert.Equal(t, 1, c.Len())
 	clock.Advance(11 * time.Minute)
-	<-c.cleanupEvent
+	<-c.cleanupEventsCh
 	assert.Equal(t, 0, c.Len())
 }
 
@@ -193,7 +193,7 @@ func TestCleanupInterval(t *testing.T) {
 	clock.Advance(11 * time.Minute)
 	assert.Equal(t, 1, c.Len())
 	clock.Advance(50 * time.Minute)
-	<-c.cleanupEvent
+	<-c.cleanupEventsCh
 	assert.Equal(t, 0, c.Len())
 }
 

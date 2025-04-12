@@ -25,9 +25,9 @@ func main() {
 	// Can also use a "Set" for cache
 	s := cache.NewSet[string](5*time.Minute)
 	s.Set("key1")
-    if s.Has("key1") {
-        fmt.Println("found key1")
-    }
-    c.Delete("key1")
+	if s.Has("key1") {
+		fmt.Println("found key1")
+	}
+	c.Delete("key1")
 }
 ```

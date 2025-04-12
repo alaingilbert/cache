@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"github.com/alaingilbert/cache/internal/utils"
 	"reflect"
 	"testing"
 	"time"
@@ -38,6 +39,10 @@ func TestItemIsExpired(t *testing.T) {
 	assert.False(t, i.isExpired(clock.Now().UnixNano()))
 	clock.Advance(time.Second)
 	assert.True(t, i.isExpired(clock.Now().UnixNano()))
+	assert.Equal(t, 1, i.Value())
+
+	i = Item[int]{value: 1, expiration: time.Now().Add(time.Minute).UnixNano()}
+	assert.False(t, i.IsExpired())
 }
 
 func TestExpireAt(t *testing.T) {
@@ -108,6 +113,44 @@ func TestDeleteAll(t *testing.T) {
 	assert.Equal(t, 0, c.Len())
 }
 
+func TestAdd(t *testing.T) {
+	c := New[string](time.Minute)
+	err := c.Add("key1", "val1")
+	assert.NoError(t, err)
+	err = c.Add("key1", "val2")
+	assert.ErrorIs(t, ErrItemAlreadyExists, err)
+}
+
+func TestReplace(t *testing.T) {
+	c := New[string](time.Minute)
+	err := c.Replace("key1", "val1")
+	assert.ErrorIs(t, ErrItemNotFound, err)
+	c.Set("key1", "val2")
+	err = c.Replace("key1", "val2")
+	assert.NoError(t, err)
+	assert.Equal(t, "val2", utils.First(c.Get("key1")))
+}
+
+func TestDelete(t *testing.T) {
+	c := New[string](time.Minute)
+	c.Set("key1", "val1")
+	assert.Equal(t, 1, c.Len())
+	c.Delete("key1")
+	assert.Equal(t, 0, c.Len())
+}
+
+func TestDeleteExpired(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock))
+	c.Set("key1", "val1")
+	c.Set("key2", "val2")
+	c.Set("key3", "val3", ExpireIn(6*time.Minute))
+	assert.Equal(t, 3, c.Len())
+	clock.Advance(61 * time.Second)
+	c.DeleteExpired()
+	assert.Equal(t, 1, c.Len())
+}
+
 func TestSetCache(t *testing.T) {
 	clock := clockwork.NewFakeClock()
 	c := NewSet[string](time.Minute, WithClock(clock))
@@ -174,6 +217,7 @@ func TestGetCastInto(t *testing.T) {
 	var v1 string
 	var v2 int
 	var v3 int64
+	var v4 int64
 	assert.True(t, GetCastInto[string](c1, "key1", &v1))
 	assert.Equal(t, "val1", v1)
 	assert.False(t, GetCastInto[int](c1, "key1", &v2))
@@ -182,4 +226,6 @@ func TestGetCastInto(t *testing.T) {
 	assert.Equal(t, 1, v2)
 	assert.True(t, GetCastInto[int64](c1, "key3", &v3))
 	assert.Equal(t, int64(1), v3)
+	assert.False(t, GetCastInto[int64](c1, "not-exist", &v4))
+	assert.Equal(t, int64(0), v4)
 }

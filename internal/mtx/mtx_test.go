@@ -36,14 +36,23 @@ func TestRWMtxMap(t *testing.T) {
 	}
 
 	m.Store("b", 2)
-	if m.Len() != 2 {
-		t.Errorf("expected length 2, got %d", m.Len())
+	m.Store("c", 3)
+	if m.Len() != 3 {
+		t.Errorf("expected length 3, got %d", m.Len())
 	}
 
 	m.Delete("a")
 	_, ok = m.Load("a")
 	if ok {
 		t.Errorf("expected key 'a' to be deleted")
+	}
+
+	val, ok := m.LoadAndDelete("b")
+	if !ok || val != 2 {
+		t.Errorf("expected to load 2, got %d, ok=%v", v, ok)
+	}
+	if m.Len() != 1 {
+		t.Errorf("expected length 1, got %d", m.Len())
 	}
 
 	m.Clear()

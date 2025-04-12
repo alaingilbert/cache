@@ -149,10 +149,15 @@ func (c *Cache[K, V]) Get(k K) (value V, found bool) {
 	return c.get(k)
 }
 
+// Take retrieve a value associated to the given key and delete the key from the cache
+func (c *Cache[K, V]) Take(k K) (value V, found bool) {
+	return c.take(k)
+}
+
 // GetWithExpiration gets a value and its expiration time from the cache.
 // If the item never expires a zero value for time.Time is returned.
 func (c *Cache[K, V]) GetWithExpiration(k K) (value V, expiration time.Time, found bool) {
-	return c.getWithExpiration(k)
+	return c.getWithExpiration(k, false)
 }
 
 // Set a key/value pair in the cache
@@ -251,10 +256,16 @@ func (c *Cache[K, V]) nowNano() int64 {
 	return c.now().UnixNano()
 }
 
-func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
+func (c *Cache[K, V]) getWithExpiration(k K, remove bool) (V, time.Time, bool) {
 	var zero V
 	now := c.nowNano()
-	item, found := c.items.Load(k)
+	var item Item[V]
+	var found bool
+	if remove {
+		item, found = c.items.LoadAndDelete(k)
+	} else {
+		item, found = c.items.Load(k)
+	}
 	if !found {
 		return zero, time.Time{}, false
 	}
@@ -269,7 +280,12 @@ func (c *Cache[K, V]) getWithExpiration(k K) (V, time.Time, bool) {
 }
 
 func (c *Cache[K, V]) get(k K) (V, bool) {
-	value, _, found := c.getWithExpiration(k)
+	value, _, found := c.getWithExpiration(k, false)
+	return value, found
+}
+
+func (c *Cache[K, V]) take(k K) (V, bool) {
+	value, _, found := c.getWithExpiration(k, true)
 	return value, found
 }
 

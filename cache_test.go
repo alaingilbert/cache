@@ -147,6 +147,16 @@ func TestAdd(t *testing.T) {
 	assert.ErrorIs(t, ErrItemAlreadyExists, err)
 }
 
+func TestTake(t *testing.T) {
+	c := New[string](time.Minute)
+	c.Set("key1", "val1")
+	assert.Equal(t, 1, c.Len())
+	val, ok := c.Take("key1")
+	assert.True(t, ok)
+	assert.Equal(t, "val1", val)
+	assert.Equal(t, 0, c.Len())
+}
+
 func TestReplace(t *testing.T) {
 	c := New[string](time.Minute)
 	err := c.Replace("key1", "val1")

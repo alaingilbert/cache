@@ -67,6 +67,16 @@ func (m *RWMtxMap[K, V]) Load(k K) (out V, ok bool) {
 	return
 }
 
+// LoadAndDelete deletes the value for a key, returning the previous value if any.
+// The loaded result reports whether the key was present.
+func (m *RWMtxMap[K, V]) LoadAndDelete(k K) (out V, loaded bool) {
+	m.With(func(m *map[K]V) {
+		out, loaded = (*m)[k]
+		delete(*m, k)
+	})
+	return
+}
+
 // Delete removes a key-value pair from the map.
 func (m *RWMtxMap[K, V]) Delete(k K) {
 	m.With(func(m *map[K]V) { delete(*m, k) })

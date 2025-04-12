@@ -13,7 +13,7 @@ func NewSet[K comparable](defaultExpiration time.Duration, opts ...Option) *SetC
 }
 
 func (s *SetCache[K]) GetExpiration(k K) (expiration time.Time, found bool) {
-	_, expiration, found = s.c.getWithExpiration(k)
+	_, expiration, found = s.c.getWithExpiration(k, false)
 	return
 }
 

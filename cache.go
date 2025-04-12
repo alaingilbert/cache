@@ -33,7 +33,7 @@ type Cache[K comparable, V any] struct {
 	defaultExpiration time.Duration            // Default expiration for items in cache
 	clock             clockwork.Clock          // Clock object for time related features
 	items             mtx.RWMtxMap[K, Item[V]] // Mutex protected hashmap that contains all items in the cache
-	cleanupEvent      chan struct{}            //
+	cleanupEvent      chan struct{}            // Notifies that a cleanup cycle has been completed (for tests)
 }
 
 // Config ...

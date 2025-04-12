@@ -11,21 +11,20 @@ import (
 )
 
 const (
-	NoExpiration      time.Duration = -1
+	// NoExpiration ...
+	NoExpiration time.Duration = -1
+	// DefaultExpiration ...
 	DefaultExpiration time.Duration = 0
 )
 
 // DefaultCleanupInterval is exported so that someone could override the value in their project
 var DefaultCleanupInterval = 10 * time.Minute
 
+// ErrItemAlreadyExists ...
 var ErrItemAlreadyExists = errors.New("item already exists")
-var ErrItemNotFound = errors.New("item does not exists")
 
-// Item wrap the user provided value and add data to it
-type Item[V any] struct {
-	value      V
-	expiration int64
-}
+// ErrItemNotFound ...
+var ErrItemNotFound = errors.New("item does not exists")
 
 // Cache ...
 type Cache[K comparable, V any] struct {
@@ -37,12 +36,14 @@ type Cache[K comparable, V any] struct {
 	cleanupEvent      chan struct{}            //
 }
 
+// Config ...
 type Config struct {
 	ctx             context.Context
 	cleanupInterval *time.Duration
 	clock           clockwork.Clock
 }
 
+// WithContext ...
 func (c *Config) WithContext(ctx context.Context) *Config {
 	if ctx != nil {
 		c.ctx = ctx
@@ -50,6 +51,7 @@ func (c *Config) WithContext(ctx context.Context) *Config {
 	return c
 }
 
+// CleanupInterval ...
 func (c *Config) CleanupInterval(cleanupInterval time.Duration) *Config {
 	if cleanupInterval != 0 {
 		c.cleanupInterval = &cleanupInterval
@@ -57,6 +59,7 @@ func (c *Config) CleanupInterval(cleanupInterval time.Duration) *Config {
 	return c
 }
 
+// WithClock ...
 func (c *Config) WithClock(clock clockwork.Clock) *Config {
 	if clock != nil {
 		c.clock = clock
@@ -64,6 +67,7 @@ func (c *Config) WithClock(clock clockwork.Clock) *Config {
 	return c
 }
 
+// Option ...
 type Option func(cfg *Config)
 
 // WithContext changes context
@@ -333,25 +337,31 @@ func (c *Cache[K, V]) getItems() (out map[K]Item[V]) {
 	return out
 }
 
+// Item wrap the user provided value and add data to it
+type Item[V any] struct {
+	value      V
+	expiration int64
+}
+
 // Value returns the value contained by the item
-func (i Item[V]) Value() V {
-	return i.value
+func (c Item[V]) Value() V {
+	return c.value
 }
 
 // Expiration returns the expiration time
-func (i Item[V]) Expiration() time.Time {
-	return time.Unix(0, i.expiration)
+func (c Item[V]) Expiration() time.Time {
+	return time.Unix(0, c.expiration)
 }
 
 // IsExpired returns either or not the item is expired right now
-func (i Item[V]) IsExpired() bool {
+func (c Item[V]) IsExpired() bool {
 	now := time.Now().UnixNano()
-	return i.isExpired(now)
+	return c.isExpired(now)
 }
 
 // Given a unix (nano) timestamp, return either or not the item is expired
-func (i Item[V]) isExpired(ts int64) bool {
-	return i.expiration > 0 && i.expiration < ts
+func (c Item[V]) isExpired(ts int64) bool {
+	return c.expiration > 0 && c.expiration < ts
 }
 
 // GetCast ...

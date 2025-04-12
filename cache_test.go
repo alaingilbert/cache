@@ -2,10 +2,11 @@ package cache
 
 import (
 	"context"
-	"github.com/alaingilbert/cache/internal/utils"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/alaingilbert/cache/internal/utils"
 
 	"github.com/alaingilbert/clockwork"
 	"github.com/stretchr/testify/assert"
@@ -219,28 +220,56 @@ func TestDestroy(t *testing.T) {
 func TestSetCache(t *testing.T) {
 	clock := clockwork.NewFakeClockAt(time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local))
 	c := NewSet[string](time.Minute, WithClock(clock))
+
+	// Test basic set operations
 	c.Set("key1")
 	c.Set("key2")
 	c.Set("key3")
 	assert.Equal(t, 3, c.Len())
 	assert.True(t, c.Has("key1"))
+	assert.True(t, c.Has("key2"))
+	assert.True(t, c.Has("key3"))
 	assert.False(t, c.Has("key4"))
+
+	// Test deletion
 	c.Delete("key1")
 	assert.False(t, c.Has("key1"))
-	assert.True(t, c.Has("key2"))
+	assert.Equal(t, 2, c.Len())
+
+	// Test expiration
 	clock.Advance(61 * time.Second)
 	assert.False(t, c.Has("key2"))
+	assert.False(t, c.Has("key3"))
+
+	// Test Add and Replace operations
 	err := c.Add("key2")
 	assert.NoError(t, err)
 	assert.True(t, c.Has("key2"))
+
 	err = c.Replace("key2")
 	assert.NoError(t, err)
-	expiration, _ := c.GetExpiration("key2")
+	assert.True(t, c.Has("key2"))
+
+	// Test expiration time
+	expiration, found := c.GetExpiration("key2")
+	assert.True(t, found)
 	assert.Equal(t, clock.Now().Add(time.Minute), expiration)
+
+	// Test bulk operations
 	c.DeleteAll()
 	assert.Equal(t, 0, c.Len())
+
+	// Test cleanup operations
+	c.Set("key1")
+	c.Set("key2")
+	clock.Advance(61 * time.Second)
 	c.DeleteExpired()
+	assert.Equal(t, 0, c.Len())
+
+	// Test destroy
+	c.Set("key1")
 	c.Destroy()
+	assert.Equal(t, 0, c.Len())
 }
 
 func TestGetCast(t *testing.T) {

@@ -217,7 +217,7 @@ func TestDestroy(t *testing.T) {
 }
 
 func TestSetCache(t *testing.T) {
-	clock := clockwork.NewFakeClock()
+	clock := clockwork.NewFakeClockAt(time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local))
 	c := NewSet[string](time.Minute, WithClock(clock))
 	c.Set("key1")
 	c.Set("key2")
@@ -233,8 +233,14 @@ func TestSetCache(t *testing.T) {
 	err := c.Add("key2")
 	assert.NoError(t, err)
 	assert.True(t, c.Has("key2"))
+	err = c.Replace("key2")
+	assert.NoError(t, err)
+	expiration, _ := c.GetExpiration("key2")
+	assert.Equal(t, clock.Now().Add(time.Minute), expiration)
 	c.DeleteAll()
 	assert.Equal(t, 0, c.Len())
+	c.DeleteExpired()
+	c.Destroy()
 }
 
 func TestGetCast(t *testing.T) {

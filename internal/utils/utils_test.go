@@ -83,3 +83,24 @@ func TestTryCast(t *testing.T) {
 	assert.True(t, TryCast[*int](j))
 	assert.Equal(t, Ptr(1), j.(reflect.Value).Interface())
 }
+
+func TestBuildConfig(t *testing.T) {
+	type Config struct {
+		A, B, C string
+	}
+	Opt1 := func(c *Config) { c.A = "hello" }
+	Opt2 := func(c *Config) { c.B = "world" }
+	c := BuildConfig([]func(*Config){Opt1, Opt2})
+	assert.Equal(t, &Config{A: "hello", B: "world"}, c)
+}
+
+func TestApplyOptions(t *testing.T) {
+	type Config struct {
+		A, B, C string
+	}
+	Opt1 := func(c *Config) { c.A = "hello" }
+	Opt2 := func(c *Config) { c.B = "world" }
+	c := &Config{}
+	ApplyOptions(c, []func(*Config){Opt1, Opt2})
+	assert.Equal(t, &Config{A: "hello", B: "world"}, c)
+}

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"github.com/alaingilbert/cache/internal/utils"
 	"reflect"
 	"testing"
@@ -53,6 +54,27 @@ func TestExpireAt(t *testing.T) {
 	assert.True(t, c.Has("key1"))
 	clock.Advance(2 * time.Minute)
 	assert.False(t, c.Has("key1"))
+}
+
+func TestGetWithExpiration(t *testing.T) {
+	clock := clockwork.NewFakeClockAt(time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local))
+	c := New[string](time.Minute, WithClock(clock))
+	c.Set("key1", "val1")
+	value, expiration, found := c.GetWithExpiration("key1")
+	assert.True(t, found)
+	assert.Equal(t, value, "val1")
+	assert.Equal(t, clock.Now().Add(time.Minute), expiration)
+}
+
+func TestGetItems(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock))
+	c.Set("key1", "val1", ExpireIn(2*time.Minute))
+	c.Set("key2", "val2")
+	c.Set("key3", "val3")
+	clock.Advance(61 * time.Second)
+	items := c.Items()
+	assert.Equal(t, 1, len(items))
 }
 
 func TestGetExpiredItem(t *testing.T) {
@@ -149,6 +171,49 @@ func TestDeleteExpired(t *testing.T) {
 	clock.Advance(61 * time.Second)
 	c.DeleteExpired()
 	assert.Equal(t, 1, c.Len())
+}
+
+func TestAutoClean(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock))
+	clock.BlockUntil(1)
+	c.Set("key1", "val1")
+	assert.Equal(t, 1, c.Len())
+	clock.Advance(11 * time.Minute)
+	<-c.cleanupEvent
+	assert.Equal(t, 0, c.Len())
+}
+
+func TestCleanupInterval(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock), CleanupInterval(time.Hour))
+	clock.BlockUntil(1)
+	c.Set("key1", "val1")
+	assert.Equal(t, 1, c.Len())
+	clock.Advance(11 * time.Minute)
+	assert.Equal(t, 1, c.Len())
+	clock.Advance(50 * time.Minute)
+	<-c.cleanupEvent
+	assert.Equal(t, 0, c.Len())
+}
+
+func TestAutoCleanEarlyReturn(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock), WithContext(ctx))
+	c.Set("key1", "val1")
+	assert.Equal(t, 1, c.Len())
+	cancel()
+	assert.Equal(t, 1, c.Len())
+}
+
+func TestDestroy(t *testing.T) {
+	clock := clockwork.NewFakeClock()
+	c := New[string](time.Minute, WithClock(clock))
+	c.Set("key1", "val1")
+	assert.Equal(t, 1, c.Len())
+	c.Destroy()
+	assert.Equal(t, 0, c.Len())
 }
 
 func TestSetCache(t *testing.T) {

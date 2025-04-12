@@ -59,10 +59,15 @@ func TestGetWithExpiration(t *testing.T) {
 	clock := clockwork.NewFakeClockAt(time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local))
 	c := New[string](time.Minute, WithClock(clock))
 	c.Set("key1", "val1")
+	c.Set("key2", "val2", NoExpire)
 	value, expiration, found := c.GetWithExpiration("key1")
 	assert.True(t, found)
 	assert.Equal(t, value, "val1")
 	assert.Equal(t, clock.Now().Add(time.Minute), expiration)
+	value, expiration, found = c.GetWithExpiration("key2")
+	assert.True(t, found)
+	assert.Equal(t, value, "val2")
+	assert.True(t, expiration.IsZero())
 }
 
 func TestGetItems(t *testing.T) {

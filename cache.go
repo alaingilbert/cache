@@ -347,7 +347,7 @@ func GetCast[T any, K comparable](c *Cache[K, any], k K) (value T, ok bool) {
 }
 
 // GetTryCast useful if you want to test if a key exists and is of a specific type
-// `if GetTryCast[int]("someKey") {`
+// `if GetTryCast[int](c, "someKey") {`
 func GetTryCast[T any, K comparable](c *Cache[K, any], k K) (ok bool) {
 	return utils.Second(GetCast[T, K](c, k))
 }

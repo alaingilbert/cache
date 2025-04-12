@@ -282,7 +282,7 @@ func (c *Cache[K, V]) set(k K, v V, opts ...ItemOption) {
 	utils.ApplyOptions(cfg, opts)
 	d := utils.Or(cfg.d, c.defaultExpiration)
 	e := int64(NoExpiration)
-	if d != NoExpiration {
+	if d != time.Duration(e) {
 		e = c.now().Add(d).UnixNano()
 	}
 	c.items.Store(k, Item[V]{value: v, expiration: e})

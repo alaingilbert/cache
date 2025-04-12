@@ -55,6 +55,11 @@ func TestRWMtxMap(t *testing.T) {
 		t.Errorf("expected length 1, got %d", m.Len())
 	}
 
+	_, ok = m.LoadAndDelete("non-existent")
+	if ok {
+		t.Errorf("expected to not load non-existent key")
+	}
+
 	m.Clear()
 	if m.Len() != 0 {
 		t.Errorf("expected map to be cleared")
